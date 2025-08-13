@@ -1,0 +1,232 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Alert,
+} from "react-native";
+
+const MAX_NOTA = 10;
+
+const toNum = (val) => {
+  if (val === null || val === undefined) return null;
+  const s = String(val).trim();
+  if (s === "") return null;
+  const n = parseFloat(s.replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
+
+const fmt = (n) => {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  const rounded = Math.round(n * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+};
+
+export default function App() {
+  const [materias, setMaterias] = useState([]);
+  const [nome, setNome] = useState("");
+  const [mediaMinima, setMediaMinima] = useState("");
+  const [notas, setNotas] = useState({ n1: "", n2: "", n3: "" });
+
+  const adicionar = () => {
+    const nm = nome.trim();
+    const mm = toNum(mediaMinima);
+    if (!nm) return Alert.alert("Erro", "Digite o nome da matéria.");
+    if (!Number.isFinite(mm) || mm < 0) return Alert.alert("Erro", "Média mínima inválida.");
+    setMaterias((p) => [
+      ...p,
+      { nome: nm, mediaMinima: mm, notas: [toNum(notas.n1), toNum(notas.n2), toNum(notas.n3)] },
+    ]);
+    setNome("");
+    setMediaMinima("");
+    setNotas({ n1: "", n2: "", n3: "" });
+  };
+
+  const resumo = (m) => {
+    const filled = m.notas.filter((x) => x !== null);
+    const sum = filled.reduce((a, b) => a + b, 0);
+    const remaining = 3 - filled.length;
+    const totalNeeded = m.mediaMinima * 3;
+    const totalMissing = Math.max(0, totalNeeded - sum);
+
+    if (remaining === 0) {
+      const finalAvg = Math.round((sum / 3) * 10) / 10;
+      const passou = finalAvg >= m.mediaMinima;
+      return { kind: passou ? "passou" : "reprovou", finalAvg, totalNeeded, notas: m.notas };
+    }
+
+    const perTrimRaw = totalMissing / remaining;
+    const perTrim = Math.round(perTrimRaw * 10) / 10;
+    const perTrimCeil = Math.ceil(perTrimRaw);
+    const impossivel = perTrimRaw > MAX_NOTA;
+
+    return {
+      kind: impossivel ? "impossivel" : "precisa",
+      totalNeeded,
+      totalMissing: Math.round(totalMissing * 10) / 10,
+      perTrim,
+      perTrimCeil,
+      remaining,
+      notas: m.notas,
+    };
+  };
+
+  return (
+    <ScrollView style={s.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <Text style={s.title}>📚 TáNaMédia</Text>
+
+      <TextInput style={s.input} placeholder="Matéria" value={nome} onChangeText={setNome} />
+      <TextInput
+        style={s.input}
+        placeholder="Média mínima (ex: 6)"
+        keyboardType="numeric"
+        value={mediaMinima}
+        onChangeText={setMediaMinima}
+      />
+
+      <View style={s.row}>
+        <TextInput
+          style={s.nota}
+          placeholder="1º T"
+          keyboardType="numeric"
+          value={notas.n1}
+          onChangeText={(v) => setNotas({ ...notas, n1: v })}
+        />
+        <TextInput
+          style={s.nota}
+          placeholder="2º T"
+          keyboardType="numeric"
+          value={notas.n2}
+          onChangeText={(v) => setNotas({ ...notas, n2: v })}
+        />
+        <TextInput
+          style={s.nota}
+          placeholder="3º T"
+          keyboardType="numeric"
+          value={notas.n3}
+          onChangeText={(v) => setNotas({ ...notas, n3: v })}
+        />
+      </View>
+
+      <TouchableOpacity style={s.btn} onPress={adicionar}>
+        <Text style={s.btnText}>Adicionar</Text>
+      </TouchableOpacity>
+
+      {materias.map((m, i) => {
+        const r = resumo(m);
+        return (
+          <View key={i} style={s.card}>
+            <Text style={s.materia}>{m.nome}</Text>
+
+            <Text>Total necessário: {fmt(r.totalNeeded)}</Text>
+            <Text>Notas: {r.notas.map((n) => fmt(n)).join("  |  ")}</Text>
+
+            {r.kind === "passou" && (
+              <>
+                <Text style={{ marginTop: 8 }}>Média anual final: {fmt(r.finalAvg)}</Text>
+                <Text style={s.success}>Parabéns você passou🥳🥳</Text>
+              </>
+            )}
+
+            {r.kind === "reprovou" && (
+              <>
+                <Text style={{ marginTop: 8 }}>Média anual final: {fmt(r.finalAvg)}</Text>
+                <Text style={s.warn}>Infelizmente é impossivel passar</Text>
+              </>
+            )}
+
+            {r.kind === "precisa" && (
+              <>
+                <Text style={{ marginTop: 8 }}>
+                  Faltam {fmt(r.totalMissing)} pontos no total — precisa de {fmt(r.perTrim)} por trimestre restante
+                  (mín {r.perTrimCeil}).
+                </Text>
+              </>
+            )}
+
+            {r.kind === "impossivel" && (
+              <Text style={[s.warn, { marginTop: 8 }]}>
+                Mesmo tirando {MAX_NOTA} nos trimestres restantes não alcança {fmt(r.totalNeeded)} — impossível.
+              </Text>
+            )}
+          </View>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#f7fbff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  input: {
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#e6eef8",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  nota: {
+    backgroundColor: "#fff",
+    padding: 10,
+    width: "31%",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e6eef8",
+    textAlign: "center",
+  },
+  btn: {
+    backgroundColor: "#2563EB",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  btnText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+  empty: {
+    textAlign: "center",
+    color: "#6b7280",
+  },
+  card: {
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 12,
+    elevation: 2,
+  },
+  materia: {
+    fontWeight: "700",
+    fontSize: 16,
+    marginBottom: 6,
+  },
+  success: {
+    color: "#059669",
+    fontWeight: "700",
+    marginTop: 8,
+  },
+  warn: {
+    color: "#b91c1c",
+    fontWeight: "700",
+  },
+});
