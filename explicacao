@@ -10,4 +10,7 @@ if (s === "") return null impede que um campo vazio seja tratado como zero
 if (s.includes(",")) return null força o uso do ponto como separador decimal.
 parseFloat(s)converte para número decimal.
 Number.isFinite(n) → garante que seja um número real válido (evita NaN ou Infinity)
-a maior parte dessas condicionais e funções eu vi no youtube, o codigo estava com diversos erros antes de eu implementar isso, e como eu pretendo usar esse aplicativo para calcular as minhas propias notas, eu precisava que ele estivesse funcional
+a maior parte dessas condicionais e funções eu vi no youtube, o codigo estava com diversos erros antes de eu implementar isso, e como eu pretendo usar esse aplicativo para calcular as minhas propias notas, eu precisava que ele estivesse funcional.
+
+da linha 17 a 21 há o Componente principal do app e os seus estados que servem para o app saber quais as materias que foram adicionadas o os seus respectivos valores
+
