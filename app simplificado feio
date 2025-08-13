@@ -1,0 +1,110 @@
+// fiz esse app pra ver notas e saber se vai passar ou não kkk
+import React,{useState} from "react"
+import {View,Text,TextInput,TouchableOpacity,ScrollView,StyleSheet,Alert} from "react-native"
+
+// valor max de nota q pode ter
+const notaMax = 10
+
+// converte pra numero (eu acho q ta certo kkk)
+function praNumero(v){
+  if(!v) return null
+  let n = parseFloat(v.replace(",","."))
+  if(isNaN(n)) return null
+  return n
+}
+
+// deixa o numero bonitinho pra mostrar
+function formatar(n){
+  if(n == null) return "-"
+  let r = Math.round(n*10)/10
+  return r
+}
+
+export default function App(){
+  const [materias,setMaterias] = useState([])
+  const [nome,setNome] = useState("")
+  const [media,setMedia] = useState("")
+  const [notas,setNotas] = useState({n1:"",n2:"",n3:""})
+
+  function adicionarMateria(){
+    if(nome.trim() == ""){
+      Alert.alert("Erro","tem que colocar o nome da materia")
+      return
+    }
+    let m = praNumero(media)
+    if(m == null){
+      Alert.alert("Erro","media invalida")
+      return
+    }
+    // adiciona no array
+    setMaterias([...materias,{nome:nome,mediaMinima:m,notas:[praNumero(notas.n1),praNumero(notas.n2),praNumero(notas.n3)]}])
+    setNome("")
+    setMedia("")
+    setNotas({n1:"",n2:"",n3:""})
+  }
+
+  function calcular(m){
+    let notasValidas = m.notas.filter(n => n != null)
+    let soma = 0
+    notasValidas.forEach(n=>soma+=n)
+    let falta = 3 - notasValidas.length
+    let precisaTotal = m.mediaMinima * 3
+    let faltaPontos = precisaTotal - soma
+    if(faltaPontos<0) faltaPontos=0
+
+    if(falta==0){
+      let mediaFinal = soma/3
+      if(mediaFinal >= m.mediaMinima){
+        return {tipo:"passou",mediaFinal}
+      }else{
+        return {tipo:"reprovou",mediaFinal}
+      }
+    }
+
+    let precisaPorTrim = faltaPontos / falta
+    if(precisaPorTrim > notaMax){
+      return {tipo:"impossivel"}
+    }
+
+    return {tipo:"precisa",faltaPontos,precisaPorTrim}
+  }
+
+  return(
+    <ScrollView style={{padding:15}}>
+      <Text style={{fontSize:20,fontWeight:"bold",textAlign:"center"}}>Notas App</Text>
+
+      <TextInput style={estilo.input} placeholder="Materia" value={nome} onChangeText={setNome}/>
+      <TextInput style={estilo.input} placeholder="Media minima" keyboardType="numeric" value={media} onChangeText={setMedia}/>
+      
+      <View style={{flexDirection:"row",justifyContent:"space-between"}}>
+        <TextInput style={estilo.nota} placeholder="1T" keyboardType="numeric" value={notas.n1} onChangeText={t=>setNotas({...notas,n1:t})}/>
+        <TextInput style={estilo.nota} placeholder="2T" keyboardType="numeric" value={notas.n2} onChangeText={t=>setNotas({...notas,n2:t})}/>
+        <TextInput style={estilo.nota} placeholder="3T" keyboardType="numeric" value={notas.n3} onChangeText={t=>setNotas({...notas,n3:t})}/>
+      </View>
+
+      <TouchableOpacity style={estilo.botao} onPress={adicionarMateria}>
+        <Text style={{color:"#fff"}}>adicionar</Text>
+      </TouchableOpacity>
+
+      {materias.map((m,idx)=>{
+        let r = calcular(m)
+        return(
+          <View key={idx} style={estilo.card}>
+            <Text style={{fontWeight:"bold"}}>{m.nome}</Text>
+            {r.tipo=="passou" && <Text>Parabens passou!!!</Text>}
+            {r.tipo=="reprovou" && <Text>Reprovado :(</Text>}
+            {r.tipo=="precisa" && <Text>falta {r.faltaPontos} pontos (precisa {r.precisaPorTrim} por trimestre)</Text>}
+            {r.tipo=="impossivel" && <Text>Impossivel de passar msm tirando {notaMax}</Text>}
+          </View>
+        )
+      })}
+    </ScrollView>
+  )
+}
+
+const estilo = StyleSheet.create({
+  input:{backgroundColor:"#eee",padding:8,marginBottom:5,borderRadius:5},
+  nota:{backgroundColor:"#eee",padding:8,width:"32%",borderRadius:5,textAlign:"center"},
+  botao:{backgroundColor:"blue",padding:10,alignItems:"center",marginTop:10},
+  card:{backgroundColor:"#ddd",padding:10,borderRadius:5,marginTop:10}
+})
