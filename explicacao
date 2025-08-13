@@ -1,1 +1,13 @@
-no primeiro campo de texto você coloca o nome da materia, no segundo a média trimestral e nos três campos abaixo voce poe as respectivas notas da materia, o aplicativo tem duas funcionalidades principais uma quando você preenche os tres campos de nota assim ele calcula se voce passou de ano e quanto foi a sua média final e a outra quando voce deixa algum dos campos em branco, assim ele calcula quando voce precisa tirar, quantos pontos faltam para voce passar em determinada materia
+no primeiro campo de texto você coloca o nome da materia, no segundo a média trimestral e nos três campos abaixo voce poe as respectivas notas da materia, o aplicativo tem duas funcionalidades principais uma quando você preenche os tres campos de nota assim ele calcula se voce passou de ano retornando uma mensagem de "Parabéns você passou" ou "Reprovado F 😢"(se a soma das 3 notas trimestrais for abaixo de 18) e quanto foi a sua média final e a outra quando voce deixa algum dos campos em branco, assim ele calcula quando voce precisa tirar, quantos pontos faltam para voce passar em determinada materia. por exemplo se eu marcar 8 no primeiro trimeste e 7 no segundo, aplicativo dirá que faltam 3 pontos nos trimestres restantes, o mesmo acontece se eu marcar apenas o primeiro campo também.
+
+
+o codigo começa definindo uma constante que limita a nota pra 10, assim o máximo de nota por trimestre é 10 pontos isso é usado no cálculo para decidir se é possível ou não atingir a média mínima restante.
+
+Da linha 8 a 14 há função praNumero, que recebe o valor digitado e tenta transforma-lo em um numero válido
+if (v == null) return null evita erros caso o valor não exista
+String(v).trim() garante que será tratado como texto e remove espaços extras
+if (s === "") return null impede que um campo vazio seja tratado como zero
+if (s.includes(",")) return null força o uso do ponto como separador decimal.
+parseFloat(s)converte para número decimal.
+Number.isFinite(n) → garante que seja um número real válido (evita NaN ou Infinity)
+a maior parte dessas condicionais e funções eu vi no youtube, o codigo estava com diversos erros antes de eu implementar isso, e como eu pretendo usar esse aplicativo para calcular as minhas propias notas, eu preciso que ele esteja funcional
